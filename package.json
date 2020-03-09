@@ -4,7 +4,8 @@
   "description": "Un puissance 4 en ligne",
   "main": "server.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node bin/server.js"
   },
   "repository": {
     "type": "git",

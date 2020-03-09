@@ -109,15 +109,20 @@ io.on("connection", (socket) => {
         }
     });
     socket.on("disconnect", () => {
-        if (players.get(socket.id) != null) {
-            let index = searchingPlayers.lastIndexOf(players.get(socket.id));
-            if (index != -1) {
-                searchingPlayers.splice(index, 1);
+        try {
+            if (players.get(socket.id) != null) {
+                let index = searchingPlayers.lastIndexOf(players.get(socket.id));
+                if (index != -1) {
+                    searchingPlayers.splice(index, 1);
+                }
+                for (index = 0; index < parties.length && (parties[index].player1.socket.id != socket.id && parties[index].player2.socket.id != socket.id); ++index) {
+                }
+                parties[index].end();
+                players.delete(socket.id);
             }
-            for (index = 0; index < parties.length && (parties[index].player1.socket.id != socket.id && parties[index].player2.socket.id != socket.id); ++index) {
-            }
-            parties[index].end();
-            players.delete(socket.id);
+        }
+        catch (e) {
+            console.log(e);
         }
     });
     socket.emit("connected");
