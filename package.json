@@ -1,0 +1,26 @@
+{
+  "name": "puissance-4",
+  "version": "0.1.0",
+  "description": "Un puissance 4 en ligne",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@gitlab.com/nilsponsard/puissance-4.git"
+  },
+  "keywords": [
+    "power4"
+  ],
+  "author": "Nils Ponsard",
+  "license": "UNLICENSED",
+  "bugs": {
+    "url": "https://gitlab.com/nilsponsard/puissance-4/issues"
+  },
+  "homepage": "https://gitlab.com/nilsponsard/puissance-4#readme",
+  "dependencies": {
+    "socket.io": "^2.0.0",
+    "express": "~4.17.1"
+  }
+}
