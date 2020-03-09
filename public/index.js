@@ -1,3 +1,4 @@
+import { createVerify } from "crypto"
 
 const lines = 6
 const rows = 7
@@ -106,6 +107,7 @@ searchButton.addEventListener("click", (ev) => {
 
             socket.emit("new player", name)
             socket.emit("search match")
+            canvas.style.filter = "grayscale(1)"
         }
     }
     else {
@@ -160,6 +162,7 @@ socket.on("queued", () => {
 socket.on("opponent name", (obj) => {
     opponent = obj.name
     playerNumber = obj.number % 2 + 1// numéro du client 
+    canvas.style.filter = "grayscale(0)"
 
     status("Une partie a été trouvée, adversaire : " + name)
 
