@@ -158,11 +158,12 @@ socket.on("queued", () => {
     status("recherche de joueur")
 })
 socket.on("opponent name", (obj) => {
+    console.log(obj)
     opponent = obj.name
     playerNumber = obj.number % 2 + 1// numéro du client 
     canvas.style.filter = "grayscale(0)"
 
-    status("Une partie a été trouvée, adversaire : " + name)
+    status("Une partie a été trouvée, adversaire : " + opponent)
 
 
 
