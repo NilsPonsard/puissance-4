@@ -10,9 +10,19 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const http = __importStar(require("http"));
 const express = __importStar(require("express"));
 const socketio = __importStar(require("socket.io"));
+const columns = 6;
+const rows = 7;
 let app = express.default();
 let server = http.createServer(app);
 let io = socketio.default(server);
+/*
+
+test vers le bas
+test diagonales (2)
+test horizontal
+
+
+*/
 app.use(express.static("public"));
 class Player {
     constructor(socket, name) {
@@ -26,8 +36,8 @@ class Match {
         this.turn = 0;
         this.player1 = player1;
         this.player2 = player2;
-        this.player1.socket.emit("opponent name", player2.name);
-        this.player2.socket.emit("opponent name", player1.name);
+        this.player1.socket.emit("opponent name", { name: player2.name, number: 2 });
+        this.player2.socket.emit("opponent name", { name: player1.name, number: 1 });
         this.grid = [];
         for (let i = 0; i < 7; ++i) {
             let line = [];
@@ -36,10 +46,12 @@ class Match {
             }
             this.grid.push(line);
         }
+        this.player1.socket.emit("place", this.grid);
+        this.player2.socket.emit("place", this.grid);
     }
     launch() {
         this.player1.socket.on("place", (pos) => {
-            console.log(pos);
+            //console.log(pos)
             if (this.turn % 2 === 0 && pos >= 0 && pos <= 7) {
                 if (this.grid[pos][0] != 0) {
                     this.player1.socket.emit("errorMessage", "col is full");
@@ -49,16 +61,18 @@ class Match {
                     let i = 0;
                     for (; i < 7 && this.grid[pos][i] === 0; ++i) {
                     }
-                    this.grid[pos][i - 1] = 1;
+                    --i;
+                    this.grid[pos][i] = 1;
                     this.turn += 1;
                     this.player2.socket.emit("place", this.grid);
                     this.player1.socket.emit("place", this.grid);
                     this.player2.socket.emit("your turn");
+                    this.checkWin([pos, i]);
                 }
             }
         });
         this.player2.socket.on("place", (pos) => {
-            console.log(pos);
+            //console.log(pos)
             if (this.turn % 2 === 1 && pos >= 0 && pos <= 7) {
                 if (this.grid[pos][0] != 0) {
                     this.player2.socket.emit("errorMessage", "col is full");
@@ -68,11 +82,13 @@ class Match {
                     let i = 0;
                     for (; i < 7 && this.grid[pos][i] === 0; ++i) {
                     }
-                    this.grid[pos][i - 1] = 2;
+                    --i;
+                    this.grid[pos][i] = 2;
                     this.turn += 1;
                     this.player2.socket.emit("place", this.grid);
                     this.player1.socket.emit("place", this.grid);
                     this.player1.socket.emit("your turn");
+                    this.checkWin([pos, i]);
                 }
             }
         });
@@ -81,6 +97,149 @@ class Match {
     end() {
         this.player1.socket.emit("match ended");
         this.player2.socket.emit("match ended");
+        delete (this.player2);
+        delete (this.player2);
+    }
+    checkWin(pos) {
+        let player = this.grid[pos[0]][pos[1]];
+        let win = false;
+        let i = pos[0];
+        let j = pos[1];
+        if (columns - j >= 3) { //si plus de 3 pièces sont empilées
+            let c = 0;
+            for (; j < columns && this.grid[i][j] === player && c <= 4; ++j) {
+                ++c;
+            }
+            if (c >= 4) {
+                win = true;
+            }
+        }
+        i = pos[0];
+        j = pos[1];
+        if (!win) {
+            // aller vers la droite
+            console.log("--horizontal");
+            console.log("vers la droite");
+            let c = 0;
+            while (i < columns && c < 4) {
+                if (this.grid[i][j] != player) {
+                    --i;
+                    break;
+                }
+                ++i;
+                ++c;
+                console.log(c);
+            }
+            console.log(`x : ${i}`);
+            if (c >= 4) {
+                win = true;
+            }
+            else {
+                console.log("vers la gauche");
+                c = 0;
+                for (; i >= 0 && c < 4 && this.grid[i][j] === player; --i) {
+                    ++c;
+                    console.log(c);
+                }
+                if (c >= 4) {
+                    win = true;
+                }
+            }
+        }
+        i = pos[0];
+        j = pos[1];
+        if (!win) {
+            console.log("--diagonale 1");
+            console.log("--haut droite");
+            // en haut à droite 
+            let c = 1;
+            while (i < columns - 1 && j > 0 && c < 4) {
+                ++i;
+                --j;
+                if (this.grid[i][j] != player) {
+                    --i;
+                    ++j;
+                    break;
+                }
+                ++c;
+                console.log(c);
+            }
+            if (c >= 4) {
+                win = true;
+            }
+            else {
+                console.log("--bas gauche");
+                console.log([i, j]);
+                // bas gauche
+                c = 1;
+                while (i > 0 && j < rows - 1 && c < 4) {
+                    --i;
+                    ++j;
+                    if (this.grid[i][j] != player) {
+                        ++i;
+                        --j;
+                        break;
+                    }
+                    ++c;
+                    console.log(c);
+                }
+                if (c >= 4) {
+                    win = true;
+                }
+            }
+        }
+        i = pos[0];
+        j = pos[1];
+        if (!win) {
+            console.log("--diagonale 2");
+            console.log([i, j]);
+            console.log("--haut gauche");
+            let c = 1;
+            while (i > 0 && j > 0 && c < 4) {
+                --i;
+                --j;
+                if (this.grid[i][j] != player) {
+                    ++i;
+                    ++j;
+                    break;
+                }
+                ++c;
+                console.log(c);
+            }
+            if (c >= 4) {
+                win = true;
+            }
+            else {
+                console.log("--bas droite");
+                console.log([i, j]);
+                c = 1;
+                while (i < columns && j < rows && c < 4) {
+                    if (this.grid[i][j] != player) {
+                        --i;
+                        --j;
+                        break;
+                    }
+                    ++i;
+                    ++j;
+                    ++c;
+                    console.log(c);
+                }
+                if (c >= 4) {
+                    win = true;
+                }
+            }
+        }
+        console.log(`win : ${win}`);
+        if (win) {
+            if (player == 1) {
+                this.player1.socket.emit("winner", true);
+                this.player2.socket.emit("winner", false);
+            }
+            if (player == 2) {
+                this.player1.socket.emit("winner", false);
+                this.player2.socket.emit("winner", true);
+            }
+        }
     }
 }
 let players = new Map();
