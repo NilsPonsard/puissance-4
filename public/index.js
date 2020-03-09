@@ -1,5 +1,3 @@
-import { createVerify } from "crypto"
-
 const lines = 6
 const rows = 7
 const caseSize = 50
