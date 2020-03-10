@@ -266,7 +266,7 @@ let connectionCount = 0;
 io.on("connection", (socket) => {
     connectionCount += 1;
     socket.on("new player", (name) => {
-        fs.appendFile("players.lo", name, () => { console.log("name " + name + " written"); });
+        fs.appendFile("players.log", name, () => { console.log("name " + name + " written"); });
         let p = new Player(socket, name);
         players.set(socket.id, p);
     });
