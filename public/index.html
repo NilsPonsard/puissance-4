@@ -9,19 +9,30 @@
 
 <body>
     <p id="errorMessage" style="display:none"></p>
+    <p> connectés : <span id="connectionCount">0</span></p>
     <p>
-        pseudo :
-        <input type="text" id="nameInput"> <button type="button" id="searchButton">Chercher une partie</button> <button
-            type="button" id="customButton">Créer une partie personnalisée</button>
-    </p>
-    <p id="statusMessage" style="display: none;">
+        Pseudo :
+        <input type="text" id="nameInput">
+        <p>
 
-    </p>
-    <p id="tourMessage"> </p>
-    <canvas id="cv" style="filter: grayscale(1);"></canvas>
-    <p>Développé par Nils Ponsard <a href="https://nilsponsard.software/">https://nilsponsard.software/</a></p>
-    <script src="/socket.io/socket.io.js"></script>
-    <script src="index.js"></script>
+
+            <button type="button" id="searchButton">Chercher une partie</button></p>
+        <p>
+            <button type="button" id="customButton">Créer une partie privée</button>
+        </p>
+        <p>
+            ID : <input type="text" id="customInput"><button type="button" id="customJoinButton">Rejoindre une partie
+                privée</button>
+
+        </p>
+        <p id="statusMessage" style="display: none;">
+
+        </p>
+        <p id="tourMessage"> </p>
+        <canvas id="cv" style="filter: grayscale(1);"></canvas>
+        <p>Développé par Nils Ponsard <a href="https://nilsponsard.software/">https://nilsponsard.software/</a></p>
+        <script src="/socket.io/socket.io.js"></script>
+        <script src="index.js"></script>
 </body>
 
 </html>

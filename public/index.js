@@ -20,9 +20,16 @@ let canvas = document.getElementById("cv")
 let tourMessage = document.getElementById("tourMessage")
 let statusMessage = document.getElementById("statusMessage")
 let errorMessage = document.getElementById("errorMessage")
+let customInput = document.getElementById("customInput")
+let customJoinButton = document.getElementById("customJoinButton")
+let countElement = document.getElementById("connectionCount")
 canvas.width = rows * caseSize
 canvas.height = lines * caseSize
 canvas.style.background = "blue"
+
+
+let connectionCount = 0
+
 
 let context = canvas.getContext("2d")
 
@@ -95,6 +102,38 @@ draw()
 var socket = io();
 
 
+customJoinButton.addEventListener("click", (ev) => {
+    if (socket.connected) {
+        let name = nameInput.value
+        if (name == null || name == "") {
+            error("name field is blank")
+        } else {
+            status("recherche de la partie")
+
+            socket.emit("new player", name)
+            socket.emit("join private game", customInput.value)
+        }
+    }
+})
+
+customButton.addEventListener("click", (ev) => {
+    if (socket.connected) {
+        let name = nameInput.value
+        if (name == null || name == "") {
+            error("name field is blank")
+        } else {
+
+            socket.emit("new player", name)
+            socket.emit("create private game")
+            status("recherche de partie")
+            canvas.style.filter = "grayscale(1)"
+        }
+    }
+})
+socket.on("private game created", (id) => {
+    status("partie créée, ID : " + id)
+})
+
 searchButton.addEventListener("click", (ev) => {
 
     if (socket.connected) {
@@ -129,9 +168,10 @@ socket.on("winner", (winner) => {
 })
 
 
-socket.on("connected", (c) => {
+socket.on("connected", (n) => {
     console.log("connected !")
-
+    connectionCount = n
+    countElement.textContent = n
 })
 socket.on("your turn", () => {
     playerTurn = true
@@ -158,7 +198,6 @@ socket.on("queued", () => {
     status("recherche de joueur")
 })
 socket.on("opponent name", (obj) => {
-    console.log(obj)
     opponent = obj.name
     playerNumber = obj.number % 2 + 1// numéro du client 
     canvas.style.filter = "grayscale(0)"
@@ -171,3 +210,9 @@ socket.on("opponent name", (obj) => {
 
 
 
+
+socket.on("connectionCount", (n) => {
+    console.log(n)
+    connectionCount = n
+    countElement.textContent = n
+})

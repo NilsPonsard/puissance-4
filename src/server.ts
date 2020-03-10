@@ -121,8 +121,13 @@ class Match {
 
     }
     end() {
-        this.player1.socket.emit("match ended")
-        this.player2.socket.emit("match ended")
+        try {
+
+            this.player1.socket.emit("match ended")
+            this.player2.socket.emit("match ended")
+        } catch (e) {
+            console.log("match delete may have failed")
+        }
         delete (this.player2)
         delete (this.player2)
     }
@@ -292,17 +297,57 @@ class Match {
 
 
 let players: Map<string, Player> = new Map()
+let privateGamesLobby: Map<string, Player> = new Map()
 
 let searchingPlayers: Array<Player> = []
 let parties: Array<Match> = []
 
 
+function privateGameIdGen() {
+    let length = 5
+    let chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
+    let charsLength = chars.length
+    let out = ""
+    for (let i = 0; i < length; ++i) {
+        out += chars.charAt(Math.floor(Math.random() * charsLength))
+    }
+    return out
+}
+
+
+
+let connectionCount = 0
+
 io.on("connection", (socket) => {
-    console.log("a socket is connected")
+    connectionCount += 1
+
 
     socket.on("new player", (name) => {
         let p = new Player(socket, name)
         players.set(socket.id, p)
+    })
+
+    socket.on("create private game", () => {
+        let gameID = privateGameIdGen()
+        while (privateGamesLobby.has(gameID)) {
+            gameID = privateGameIdGen()
+        }
+        privateGamesLobby.set(gameID, <Player>players.get(socket.id))
+        socket.emit("private game created", gameID)
+    })
+
+    socket.on("join private game", (gameID) => {
+        if (players.get(socket.id)) {
+            if (privateGamesLobby.get(gameID)) {
+                let partie = new Match(<Player>privateGamesLobby.get(gameID), <Player>players.get(socket.id))
+                partie.launch()
+                parties.push(partie)
+            } else {
+                socket.emit("errorMessage", "partie non trouvée")
+            }
+        } else {
+            socket.emit("errorMessage", "player is undefined")
+        }
     })
 
 
@@ -323,6 +368,10 @@ io.on("connection", (socket) => {
         }
     })
     socket.on("disconnect", () => {
+        connectionCount -= 1
+        console.log("disconnected", connectionCount)
+        socket.broadcast.emit("connectionCount", connectionCount)
+
         try {
 
             if (players.get(socket.id) != null) {
@@ -340,7 +389,9 @@ io.on("connection", (socket) => {
             console.log(e)
         }
     })
-    socket.emit("connected")
+    socket.broadcast.emit("connectionCount", connectionCount)
+    console.log("a socket is connected")
+    socket.emit("connected", connectionCount)
 
 })
 
