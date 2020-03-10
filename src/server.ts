@@ -41,13 +41,13 @@ class Match {
     player1: Player
     grid: Array<Array<number>>
     player2: Player
-
+    playing: boolean
     turn: number = 0
 
     constructor(player1: Player, player2: Player) {
         this.player1 = player1
         this.player2 = player2
-
+        this.playing = true
         this.player1.socket.emit("opponent name", { name: player2.name, number: 2 })
         this.player2.socket.emit("opponent name", { name: player1.name, number: 1 })
 
@@ -65,55 +65,59 @@ class Match {
 
         this.player1.socket.on("place", (pos: number) => {
             //console.log(pos)
+            if (this.playing) {
 
-            if (this.turn % 2 === 0 && pos >= 0 && pos <= 7) {
-                if (this.grid[pos][0] != 0) {
-                    this.player1.socket.emit("errorMessage", "col is full")
-                    this.player1.socket.emit("your turn")
+                if (this.turn % 2 === 0 && pos >= 0 && pos <= 7) {
+                    if (this.grid[pos][0] != 0) {
+                        this.player1.socket.emit("errorMessage", "col is full")
+                        this.player1.socket.emit("your turn")
 
-                } else {
-                    let i = 0
-                    for (; i < 7 && this.grid[pos][i] === 0; ++i) {
+                    } else {
+                        let i = 0
+                        for (; i < 7 && this.grid[pos][i] === 0; ++i) {
 
+                        }
+                        --i
+                        this.grid[pos][i] = 1
+
+                        this.turn += 1
+                        this.player2.socket.emit("place", this.grid)
+                        this.player1.socket.emit("place", this.grid)
+
+                        this.player2.socket.emit("your turn")
+                        this.checkWin([pos, i])
                     }
-                    --i
-                    this.grid[pos][i] = 1
 
-                    this.turn += 1
-                    this.player2.socket.emit("place", this.grid)
-                    this.player1.socket.emit("place", this.grid)
-
-                    this.player2.socket.emit("your turn")
-                    this.checkWin([pos, i])
                 }
-
             }
+
         })
         this.player2.socket.on("place", (pos: number) => {
             //console.log(pos)
+            if (this.playing) {
+                if (this.turn % 2 === 1 && pos >= 0 && pos <= 7) {
+                    if (this.grid[pos][0] != 0) {
+                        this.player2.socket.emit("errorMessage", "col is full")
+                        this.player2.socket.emit("your turn")
 
-            if (this.turn % 2 === 1 && pos >= 0 && pos <= 7) {
-                if (this.grid[pos][0] != 0) {
-                    this.player2.socket.emit("errorMessage", "col is full")
-                    this.player2.socket.emit("your turn")
+                    } else {
+                        let i = 0
+                        for (; i < 7 && this.grid[pos][i] === 0; ++i) {
 
-                } else {
-                    let i = 0
-                    for (; i < 7 && this.grid[pos][i] === 0; ++i) {
+                        }
+                        --i
+                        this.grid[pos][i] = 2
+
+                        this.turn += 1
+                        this.player2.socket.emit("place", this.grid)
+                        this.player1.socket.emit("place", this.grid)
+
+                        this.player1.socket.emit("your turn")
+                        this.checkWin([pos, i])
 
                     }
-                    --i
-                    this.grid[pos][i] = 2
-
-                    this.turn += 1
-                    this.player2.socket.emit("place", this.grid)
-                    this.player1.socket.emit("place", this.grid)
-
-                    this.player1.socket.emit("your turn")
-                    this.checkWin([pos, i])
 
                 }
-
             }
         })
         this.player1.socket.emit("your turn")
@@ -130,6 +134,7 @@ class Match {
         }
         delete (this.player2)
         delete (this.player2)
+
     }
     checkWin(pos: Array<number>) {
         let player = this.grid[pos[0]][pos[1]]
@@ -153,33 +158,28 @@ class Match {
             console.log("--horizontal")
 
             console.log("vers la droite")
-            let c = 0
-            while (i < columns && c < 4) {
+
+            while (i < columns) {
                 if (this.grid[i][j] != player) {
                     --i
                     break
                 }
                 ++i
-                ++c
 
-                console.log(c)
             }
             console.log(`x : ${i}`)
+
+            console.log("vers la gauche")
+            let c = 0
+            for (; i >= 0 && c < 4 && this.grid[i][j] === player; --i) {
+                ++c
+                console.log(c)
+
+            }
             if (c >= 4) {
                 win = true
             }
-            else {
-                console.log("vers la gauche")
-                c = 0
-                for (; i >= 0 && c < 4 && this.grid[i][j] === player; --i) {
-                    ++c
-                    console.log(c)
 
-                }
-                if (c >= 4) {
-                    win = true
-                }
-            }
         }
         i = pos[0]
         j = pos[1]
@@ -188,8 +188,8 @@ class Match {
             console.log("--haut droite")
 
             // en haut à droite 
-            let c = 1
-            while (i < columns - 1 && j > 0 && c < 4) {
+
+            while (i < columns - 1 && j > 0) {
                 ++i
                 --j
                 if (this.grid[i][j] != player) {
@@ -198,37 +198,29 @@ class Match {
                     break
                 }
 
+            }
 
+            console.log("--bas gauche")
+            console.log([i, j])
+            // bas gauche
+            let c = 1
+            while (i > 0 && j < rows - 1 && c < 4) {
+                --i
+                ++j
+                if (this.grid[i][j] != player) {
+                    ++i
+                    --j
+                    break
+                }
 
                 ++c
                 console.log(c)
-            }
 
+            }
             if (c >= 4) {
                 win = true
             }
-            else {
-                console.log("--bas gauche")
-                console.log([i, j])
-                // bas gauche
-                c = 1
-                while (i > 0 && j < rows - 1 && c < 4) {
-                    --i
-                    ++j
-                    if (this.grid[i][j] != player) {
-                        ++i
-                        --j
-                        break
-                    }
 
-                    ++c
-                    console.log(c)
-
-                }
-                if (c >= 4) {
-                    win = true
-                }
-            }
         }
         i = pos[0]
         j = pos[1]
@@ -281,6 +273,7 @@ class Match {
 
         console.log(`win : ${win}`)
         if (win) {
+            this.playing = false
             if (player == 1) {
                 this.player1.socket.emit("winner", true)
                 this.player2.socket.emit("winner", false)
