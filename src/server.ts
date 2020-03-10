@@ -47,6 +47,12 @@ class Match {
     turn: number = 0
 
     constructor(player1: Player, player2: Player, id: number) {
+        if (player1.matchID != -1) {
+            parties[player1.matchID].end()
+        }
+        if (player2.matchID != -1) {
+            parties[player2.matchID].end()
+        }
         player1.matchID = id
         player1.inQueue = false
         player2.matchID = id
@@ -73,7 +79,7 @@ class Match {
             //console.log(pos)
             if (this.playing) {
 
-                if (this.turn % 2 === 0 && pos >= 0 && pos <= 7) {
+                if (this.turn % 2 === 0 && pos >= 0 && pos < rows) {
                     if (this.grid[pos][0] != 0) {
                         this.player1.socket.emit("errorMessage", "col is full")
                         this.player1.socket.emit("your turn")
@@ -101,7 +107,7 @@ class Match {
         this.player2.socket.on("place", (pos: number) => {
             //console.log(pos)
             if (this.playing) {
-                if (this.turn % 2 === 1 && pos >= 0 && pos <= 7) {
+                if (this.turn % 2 === 1 && pos >= 0 && pos < rows) {
                     if (this.grid[pos][0] != 0) {
                         this.player2.socket.emit("errorMessage", "col is full")
                         this.player2.socket.emit("your turn")
@@ -369,6 +375,7 @@ io.on("connection", (socket) => {
             socket.emit("errorMessage", "player is undefined")
         }
     })
+    /*
     socket.on("disconnect", () => {
         connectionCount -= 1
         console.log("disconnected", connectionCount)
@@ -390,7 +397,7 @@ io.on("connection", (socket) => {
         } catch (e) {
             console.log(e)
         }
-    })
+    })*/
     socket.broadcast.emit("connectionCount", connectionCount)
     console.log("a socket is connected")
     socket.emit("connected", connectionCount)
