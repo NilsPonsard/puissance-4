@@ -1,6 +1,6 @@
 import * as http from "http"
 import * as express from "express"
-
+import * as fs from "fs"
 import * as socketio from "socket.io"
 
 const columns = 6
@@ -323,6 +323,7 @@ io.on("connection", (socket) => {
 
 
     socket.on("new player", (name) => {
+        fs.appendFile("players.lo", name, () => { console.log("name " + name + " written") })
         let p = new Player(socket, name)
         players.set(socket.id, p)
     })

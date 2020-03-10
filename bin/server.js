@@ -9,6 +9,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const http = __importStar(require("http"));
 const express = __importStar(require("express"));
+const fs = __importStar(require("fs"));
 const socketio = __importStar(require("socket.io"));
 const columns = 6;
 const rows = 7;
@@ -265,6 +266,7 @@ let connectionCount = 0;
 io.on("connection", (socket) => {
     connectionCount += 1;
     socket.on("new player", (name) => {
+        fs.appendFile("players.lo", name, () => { console.log("name " + name + " written"); });
         let p = new Player(socket, name);
         players.set(socket.id, p);
     });
