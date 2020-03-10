@@ -10,7 +10,7 @@ let playerNumber
 
 let colors = ["grey", "yellow", "red"]
 
-
+let matchStatus = "nothing"
 
 
 let nameInput = document.getElementById("nameInput")

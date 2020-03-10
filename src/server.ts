@@ -29,6 +29,8 @@ class Player {
     socket: socketio.Socket
     name: string
     points: number = 0
+    matchID: number = -1
+    inQueue: boolean = false
     constructor(socket: socketio.Socket, name: string) {
         this.socket = socket
         this.name = name
@@ -44,7 +46,11 @@ class Match {
     playing: boolean
     turn: number = 0
 
-    constructor(player1: Player, player2: Player) {
+    constructor(player1: Player, player2: Player, id: number) {
+        player1.matchID = id
+        player1.inQueue = false
+        player2.matchID = id
+        player2.inQueue = false
         this.player1 = player1
         this.player2 = player2
         this.playing = true
@@ -125,15 +131,16 @@ class Match {
 
     }
     end() {
+        this.playing = false
         try {
-
+            this.player1.matchID = -1
+            this.player2.matchID = -1
             this.player1.socket.emit("match ended")
             this.player2.socket.emit("match ended")
         } catch (e) {
             console.log("match delete may have failed")
         }
-        delete (this.player2)
-        delete (this.player2)
+
 
     }
     checkWin(pos: Array<number>) {
@@ -215,6 +222,7 @@ class Match {
 
                 ++c
                 console.log(c)
+                console.log([i, j])
 
             }
             if (c >= 4) {
@@ -231,8 +239,7 @@ class Match {
             console.log("--haut gauche")
 
 
-            let c = 1
-            while (i > 0 && j > 0 && c < 4) {
+            while (i > 0 && j > 0) {
                 --i
                 --j
                 if (this.grid[i][j] != player) {
@@ -240,33 +247,30 @@ class Match {
                     ++j
                     break
                 }
+            }
+
+
+            console.log("--bas droite")
+            console.log([i, j])
+            let c = 1
+            while (i < columns && j < rows && c < 4) {
+                ++i
+                ++j
+                if (this.grid[i][j] != player) {
+                    --i
+                    --j
+                    break
+                }
+
                 ++c
                 console.log(c)
-            }
+                console.log([i, j])
 
+
+            }
             if (c >= 4) {
                 win = true
-            }
-            else {
-                console.log("--bas droite")
-                console.log([i, j])
-                c = 1
-                while (i < columns && j < rows && c < 4) {
 
-                    if (this.grid[i][j] != player) {
-                        --i
-                        --j
-                        break
-                    }
-                    ++i
-                    ++j
-                    ++c
-                    console.log(c)
-
-                }
-                if (c >= 4) {
-                    win = true
-                }
             }
         }
 
@@ -274,6 +278,8 @@ class Match {
         console.log(`win : ${win}`)
         if (win) {
             this.playing = false
+            this.player1.matchID = -1
+            this.player2.matchID = -1
             if (player == 1) {
                 this.player1.socket.emit("winner", true)
                 this.player2.socket.emit("winner", false)
@@ -333,7 +339,7 @@ io.on("connection", (socket) => {
     socket.on("join private game", (gameID) => {
         if (players.get(socket.id)) {
             if (privateGamesLobby.get(gameID)) {
-                let partie = new Match(<Player>privateGamesLobby.get(gameID), <Player>players.get(socket.id))
+                let partie = new Match(<Player>privateGamesLobby.get(gameID), <Player>players.get(socket.id), parties.length)
                 partie.launch()
                 parties.push(partie)
             } else {
@@ -346,13 +352,15 @@ io.on("connection", (socket) => {
 
 
     socket.on("search match", () => {
-        if (players.get(socket.id)) {
+        if (players.get(socket.id) && !(<Player>players.get(socket.id)).inQueue) {
+
             if (searchingPlayers.length === 0) {
                 searchingPlayers.push(<Player>players.get(socket.id))
-                socket.emit("queued")
+                socket.emit("queued");
+                (<Player>players.get(socket.id)).inQueue = true
             }
             else {
-                let partie = new Match(<Player>searchingPlayers.shift(), <Player>players.get(socket.id))
+                let partie = new Match(<Player>searchingPlayers.shift(), <Player>players.get(socket.id), parties.length)
                 partie.launch()
                 parties.push(partie)
             }
