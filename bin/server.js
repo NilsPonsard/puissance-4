@@ -309,9 +309,16 @@ io.on("connection", (socket) => {
             socket.emit("errorMessage", "player is undefined");
         }
     });
-    /*
     socket.on("disconnect", () => {
-        connectionCount -= 1
+        connectionCount -= 1;
+        if (players.get(socket.id)) {
+            // kick from queue at least
+            players.get(socket.id).inQueue = false;
+            let index = searchingPlayers.lastIndexOf(players.get(socket.id));
+            if (index != -1) {
+                searchingPlayers.splice(index, 1);
+            }
+        } /*
         console.log("disconnected", connectionCount)
         socket.broadcast.emit("connectionCount", connectionCount)
 
@@ -319,10 +326,7 @@ io.on("connection", (socket) => {
 
             if (players.get(socket.id) != null) {
 
-                let index = searchingPlayers.lastIndexOf(<Player>players.get(socket.id))
-                if (index != -1) {
-                    searchingPlayers.splice(index, 1)
-                }
+                
                 for (index = 0; index < parties.length && (parties[index].player1.socket.id != socket.id && parties[index].player2.socket.id != socket.id); ++index) {
                 }
                 parties[index].end()
@@ -331,7 +335,8 @@ io.on("connection", (socket) => {
         } catch (e) {
             console.log(e)
         }
-    })*/
+        */
+    });
     socket.broadcast.emit("connectionCount", connectionCount);
     console.log("a socket is connected");
     socket.emit("connected", connectionCount);
